@@ -187,6 +187,7 @@ board = []
 for card in community_cards:
     val = card.value
     suit = card.suit[0]
+    print("Val: ", val, "Suit: ", suit)
     card_str += val + suit
     c = cd.new(card_str)
     board.append(c)
@@ -200,6 +201,7 @@ for hand in other_hands:
     for card in hand.hand:
         val = card.value
         suit = card.suit[0]
+        # print("Val: ", val, "Suit: ", suit)
         card_str += val + suit
         c = cd.new(card_str)
         card_list2.append(c)
@@ -256,7 +258,7 @@ for score in scores:
     num_winning_hands.append(winning_hands)
 
 for i in range(len(num_winning_hands)):
-    print("Player ", i, " wins ", num_winning_hands[i], " hands out of ", num_hands, " hands, which is ", num_winning_hands[i]/num_hands*100, "%")
+    print("Player ", i+1, " wins ", num_winning_hands[i], " hands out of ", num_hands, " hands, which is ", num_winning_hands[i]/num_hands*100, "%")
 
 # # Print ending hand 1
 # print("-------------------")
