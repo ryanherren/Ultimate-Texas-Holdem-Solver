@@ -99,7 +99,10 @@ for i in range(NUM_PLAYERS):
     hands.append(Hand(table[i]))
 
 # Get all other possible hands
-other_hands = list(combinations(deck, 2))
+other_hands2 = list(combinations(deck, 2))
+other_hands = []
+for hand in other_hands2:
+    other_hands.append(Hand(hand))
 print(len(other_hands))
 
 # for hand in hands:
@@ -114,19 +117,19 @@ print(len(other_hands))
 #     print(hand.hand[0].value, hand.hand[0].suit, hand.hand[1].value, hand.hand[1].suit)
 #     print(hand.pair, hand.suited, hand.high, hand.low, hand.broadway, hand.suited_broadway, hand.connecter, hand.suited_connector)
 
-print("Table cards: ")
-# Print the table cards 
-for i in range(NUM_PLAYERS):
-    print(table[i][0].value, table[i][0].suit, table[i][1].value, table[i][1].suit)
+# print("Table cards: ")
+# # Print the table cards 
+# for i in range(NUM_PLAYERS):
+#     print(table[i][0].value, table[i][0].suit, table[i][1].value, table[i][1].suit)
 
 community_cards = get_community_cards(deck)
 
-print("Community cards: ")
-# Print the community cards
-for i in range(5):
-    print(community_cards[i].value, community_cards[i].suit)
+# print("Community cards: ")
+# # Print the community cards
+# for i in range(5):
+#     print(community_cards[i].value, community_cards[i].suit)
 
-print("-------------------")
+# print("-------------------")
 
 # print(hand.hand[0].value, hand.hand[0].suit, hand.hand[1].value, hand.hand[1].suit)
 # # print("pair: ", hand.pair, "suited: ", hand.suited, "high: ", hand.high, "low: ", hand.low, "broadway: ", hand.broadway, "suited_broadway: ", hand.suited_broadway, "suited_connector: ", hand.suited_connector)
@@ -144,7 +147,7 @@ print("-------------------")
 
 # print("Community combinations: ", calculate_combinations(deck, 5))
 
-# Creating ending hands including community cards
+# Creating ending hands including community cards. This is an array of 7 card arrays
 end_hands = []
 temp_hand = []
 for hand in hands:
@@ -162,9 +165,11 @@ for hand in hands:
 # Creating clean hands for each hand in format of ValueSuit, ValueSuit, ValueSuit, ValueSuit, ValueSuit, ValueSuit, ValueSuit
 # For example, a hand with ['A', 'heart'], ['K', 'heart'], ['Q', 'heart'], ['J', 'heart'], ['T', 'heart'], ['9', 'heart'], ['8', 'heart'] will be printed as:
 # [Ah, Kh, Qh, Jh, Th, 9h, 8h]
+# For use in treys evaluator
 # First, for the hands
 card_str = ""
 card_list = []
+# Hand_list has hands for all NUM_PLAYERS players
 hand_list = []
 for hand in hands:
     for card in hand.hand:
@@ -186,6 +191,22 @@ for card in community_cards:
     c = cd.new(card_str)
     board.append(c)
     card_str = ""
+# Then, for all possible hands
+# how to access: other_hands[0][0].value, other_hands[0][0].suit, other_hands[0][1].value, other_hands[0][1].suit
+# This is every other possible hand (780) when taking out the player hands and the community cards
+all_hands = []
+card_list2 = []
+for hand in other_hands:
+    for card in hand.hand:
+        val = card.value
+        suit = card.suit[0]
+        card_str += val + suit
+        c = cd.new(card_str)
+        card_list2.append(c)
+        card_str = ""
+    all_hands.append(card_list2)
+    card_list2 = []
+
 
 # Printing all ending hands
 # for hand in end_hands:
@@ -195,19 +216,47 @@ for card in community_cards:
 #     for card in hand:
 #         print(card.value, card.suit)
 #     print("--------")
+evaluator = Evaluator()
+
+# Evaluate all other possible hands without community cards and player cards
+all_scores = []
+all_classes = []
+for hand in all_hands:
+    score = evaluator.evaluate(hand, board)
+    all_scores.append(score)
+    class_ = evaluator.get_rank_class(score)
+    all_classes.append(class_)
+    # cd.print_pretty_cards(hand)
+    # print("Score: %d - %s" % (score, evaluator.class_to_string(class_)))
+
 
 # Print all treys formatted hands
-evaluator = Evaluator()
 scores = []
 classes = []
-print("Board: ", board)
+print("Board: ")
+cd.print_pretty_cards(board)
+print("-------------------")
 for hand in hand_list:
     score = evaluator.evaluate(hand, board)
     scores.append(score)
     class_ = evaluator.get_rank_class(score)
     classes.append(class_)
+    cd.print_pretty_cards(hand)
     print("Score: %d - %s" % (score, evaluator.class_to_string(class_)))
 # print(evaluator.evaluate(hand_list[0], board))
+
+# Counting number of winning hands for each player
+num_hands = len(all_scores)
+num_winning_hands = []
+for score in scores:
+    winning_hands = 0
+    for score2 in all_scores:
+        if score < score2:
+            winning_hands += 1
+    num_winning_hands.append(winning_hands)
+
+for i in range(len(num_winning_hands)):
+    print("Player ", i, " wins ", num_winning_hands[i], " hands out of ", num_hands, " hands, which is ", num_winning_hands[i]/num_hands*100, "%")
 
 # # Print ending hand 1
 # print("-------------------")
