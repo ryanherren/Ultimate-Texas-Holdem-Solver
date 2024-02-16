@@ -7,6 +7,8 @@ After receiving the hole cards, the player can either wager 4x or 3x of their an
 Raising 3x preflop is a -EV play in comparison to 4x or fold, so our strategies will be ignoring that as an option. 
 If the player checks pre-flop, they then see a flop of three cards. At this point, they can either check again or bet 2x the ante.
 If the player checks again, they then see the turn and river at the same time. At this point, the player can either call (1x ante) or fold.
+More playing information and payout structures can be found here:
+https://www.pokerlistings.com/how-to-play-ultimate-texas-holdem
 
 This project's goal is to analyze the proper pre-flop 4x range, when to bet 2x on the flop, and when to call river.
 This goal includes building an AI Agent, using Reinforcement Learning, that can play GTO.
