@@ -5,6 +5,8 @@ from itertools import combinations
 import random
 from treys import Evaluator, Deck
 from treys import Card as cd
+import time
+from datetime import datetime
 
 connectors = [['A','2'], ['2','3'], ['3','4'], ['4','5'], ['5','6'], ['6','7'], ['7','8'], ['8','9'], ['9','T'], ['T','J'], ['J','Q'], ['Q','K'], ['K','A']]
 colors = ['heart', 'diamond', 'club', 'spade']
@@ -71,16 +73,16 @@ def calculate_pair(hand, deck):
 def calculate_combinations(deck, cards):
     return comb(len(deck), cards)
 
-def get_community_cards(deck):
+def get_community_cards(deck, num_cards):
     community = []
-    for i in range(5):
+    for i in range(num_cards):
         community.append(deck.pop())
     return community
 
 def check_hand(end_hand):
     print("Checking hand: ", end_hand)
 
-def check_high_card(handhand):
+def check_high_card(hand):
     maxi = max(hand[0].value, hand[1].value, hand[2].value, hand[3].value, hand[4].value, hand[5].value)
     return maxi
 
@@ -122,7 +124,7 @@ print(len(other_hands))
 # for i in range(NUM_PLAYERS):
 #     print(table[i][0].value, table[i][0].suit, table[i][1].value, table[i][1].suit)
 
-community_cards = get_community_cards(deck)
+community_cards = get_community_cards(deck, 5)
 
 # print("Community cards: ")
 # # Print the community cards
@@ -195,6 +197,7 @@ for card in community_cards:
 # Then, for all possible hands
 # how to access: other_hands[0][0].value, other_hands[0][0].suit, other_hands[0][1].value, other_hands[0][1].suit
 # This is every other possible hand (780) when taking out the player hands and the community cards
+# There is a bug somewhere in here (probably with assigning card_str) that causes flushes to break in evaluation
 all_hands = []
 card_list2 = []
 for hand in other_hands:
@@ -203,13 +206,16 @@ for hand in other_hands:
         suit = card.suit[0]
         # print("Val: ", val, "Suit: ", suit)
         card_str += val + suit
+        # print(card_str)
         c = cd.new(card_str)
         card_list2.append(c)
         card_str = ""
     all_hands.append(card_list2)
     card_list2 = []
 
-
+# now = datetime.now()
+# file_name = "all_hands" + now.strftime("%Y%m%d%H%M%S") + ".csv"
+# np.savetxt(file_name, all_hands, delimiter=",", fmt='%s')
 # Printing all ending hands
 # for hand in end_hands:
 #     print(hand.hand[0].value, hand.hand[0].suit, hand.hand[1].value, hand.hand[1].suit, hand.hand[2].value, hand.hand[2].suit, hand.hand[3].value, hand.hand[3].suit, hand.hand[4].value, hand.hand[4].suit, hand.hand[5].value, hand.hand[5].suit, hand.hand[6].value, hand.hand[6].suit)
@@ -224,6 +230,7 @@ evaluator = Evaluator()
 all_scores = []
 all_classes = []
 for hand in all_hands:
+    # time.sleep(0.1)
     score = evaluator.evaluate(hand, board)
     all_scores.append(score)
     class_ = evaluator.get_rank_class(score)

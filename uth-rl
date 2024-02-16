@@ -1,0 +1,215 @@
+import numpy as np
+# import pied_poker as pp
+from math import comb
+from itertools import combinations
+import random
+from treys import Evaluator, Deck
+from treys import Card as cd
+import time
+from datetime import datetime
+
+connectors = [['A','2'], ['2','3'], ['3','4'], ['4','5'], ['5','6'], ['6','7'], ['7','8'], ['8','9'], ['9','T'], ['T','J'], ['J','Q'], ['Q','K'], ['K','A']]
+colors = ['heart', 'diamond', 'club', 'spade']
+values = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
+broadways = ['A', 'K', 'Q', 'J', 'T']
+sort_order = {'A': 1, 'K': 2, 'Q': 3, 'J': 4, 'T': 5, '9': 6, '8': 7, '7': 8, '6': 9, '5': 10, '4': 11, '3': 12, '2': 13}
+
+class Card:
+    def __init__(self, value, suit):
+        self.suit = suit
+        self.value = value
+
+class Hand:
+    def __init__(self, hand):
+        self.hand = hand
+        self.pair = hand[0].value == hand[1].value
+        self.suited = hand[0].suit == hand[1].suit
+        self.high = max(hand[0].value, hand[1].value)
+        self.low = min(hand[0].value, hand[1].value)
+        self.broadway = True if self.high in broadways and self.low in broadways and self.high != self.low else False
+        self.suited_broadway = self.suited and self.broadway
+        self.connecter = True if [self.low, self.high] in connectors else False    
+        self.suited_connector = True if [self.low, self.high] in connectors and self.suited else False
+        self.pair_odds = 100 if self.pair else 0
+        self.two_pair_odds = 0
+        self.set_odds = 0
+        self.straight_odds = 0
+        self.flush_odds = 0
+        self.full_house_odds = 0
+        self.quads_odds = 0
+        self.straight_flush_odds = 0
+        self.royal_flush_odds = 0
+
+def start_hand():
+    deck = [Card(value, color) for color in colors for value in values]
+    np.random.shuffle(deck)
+    return deck
+
+def get_hand(deck):
+    hand = []
+    for i in range(2):
+        hand.append(deck.pop())
+    return Hand(hand)
+
+def get_table(deck, players):
+    table = []
+    hand = []
+    for i in range(players):
+        hand.append(deck.pop())
+        hand.append(deck.pop())
+        table.append(hand)
+        hand = []
+    return table
+
+def calculate_pair(hand, deck):
+    pair_outs = 0
+    for card in deck:
+        if card.value == hand.high or card.value == hand.low:
+            pair_outs += 1
+
+    pair_odds = ()
+    return pair_outs
+
+def calculate_combinations(deck, cards):
+    return comb(len(deck), cards)
+
+def get_community_cards(deck):
+    community = []
+    for i in range(5):
+        community.append(deck.pop())
+    return community
+
+def check_hand(end_hand):
+    print("Checking hand: ", end_hand)
+
+def check_high_card(hand):
+    maxi = max(hand[0].value, hand[1].value, hand[2].value, hand[3].value, hand[4].value, hand[5].value)
+    return maxi
+
+def sort_hand(hand):
+    hand.sort(key=lambda card: sort_order[card.value])
+    return hand
+
+def calculate_payout(dealer_rating, player_rating, player_hand, play):
+    blind = 1
+    ante = 1
+    payout = 0
+    if dealer_rating < 6168:
+        qualify = True
+    else:
+        qualify = False
+    if dealer_rating < player_rating:
+        return -(play + blind + ante)
+    elif dealer_rating > player_rating:
+        # Paying ante if dealer qualifies
+        if qualify:
+            payout = payout + 1
+        # Paying play
+        payout = payout + play
+        # Paying blind based on hand
+        match player_hand:
+            case "Straight": #straight pays 1:1
+                payout = payout + 1
+            case "Flush": #flush pays 3:2
+                payout = payout + 1.5
+            case "Full House": #full house pays 3:1
+                payout = payout + 3
+            case "Four of a Kind": #four of a kind pays 10:1
+                payout = payout + 10
+            case "Straight Flush": #straight flush pays 50:1
+                payout = payout + 50
+            case "Royal Flush": #royal flush pays 500:1
+                payout = payout + 500
+            case _:
+                payout = payout + 0   
+    else:
+        return 0 
+    return payout
+
+
+# Get the deck and the table
+deck = start_hand()
+NUM_PLAYERS = 6
+table = get_table(deck, NUM_PLAYERS)
+
+# Get the hands
+hands =[]
+for i in range(NUM_PLAYERS):
+    hands.append(Hand(table[i]))
+
+# Get the community cards
+community_cards = get_community_cards(deck)
+
+dealer_hand = get_hand(deck)
+
+# Creating clean hands for each hand in format of ValueSuit, ValueSuit, ValueSuit, ValueSuit, ValueSuit, ValueSuit, ValueSuit
+# For example, a hand with ['A', 'heart'], ['K', 'heart'], ['Q', 'heart'], ['J', 'heart'], ['T', 'heart'], ['9', 'heart'], ['8', 'heart'] will be printed as:
+# [Ah, Kh, Qh, Jh, Th, 9h, 8h]
+# For use in treys evaluator
+# First, for the hands
+card_str = ""
+card_list = []
+# Hand_list has hands for all NUM_PLAYERS players
+hand_list = []
+for hand in hands:
+    for card in hand.hand:
+        val = card.value
+        suit = card.suit[0]
+        # print("Val: ", val, "Suit: ", suit)
+        card_str += val + suit
+        c = cd.new(card_str)
+        card_list.append(c)
+        card_str = ""
+    hand_list.append(card_list)
+    card_list = []
+# Then, for the community cards
+board = []
+for card in community_cards:
+    val = card.value
+    suit = card.suit[0]
+    # print("Val: ", val, "Suit: ", suit)
+    card_str += val + suit
+    c = cd.new(card_str)
+    board.append(c)
+    card_str = ""
+# Then, for the dealer hand
+dealer = []
+for card in dealer_hand.hand:
+    val = card.value
+    suit = card.suit[0]
+    # print("Val: ", val, "Suit: ", suit)
+    card_str += val + suit
+    c = cd.new(card_str)
+    dealer.append(c)
+    card_str = ""
+
+# Print all treys formatted hands
+evaluator = Evaluator()
+# Calculate dealer score and class
+dscore = evaluator.evaluate(dealer, board)
+dclass = evaluator.get_rank_class(dscore)
+scores = []
+classes = []
+print("Board: ")
+cd.print_pretty_cards(board)
+print("-------------------")
+for hand in hand_list:
+    score = evaluator.evaluate(hand, board)
+    scores.append(score)
+    class_ = evaluator.get_rank_class(score)
+    classes.append(class_)
+    print("Score: %d - %s" % (score, evaluator.class_to_string(class_)))
+    cd.print_pretty_cards(hand)
+    if score < dscore:
+        print("Player wins: ", calculate_payout(dscore, score, evaluator.class_to_string(class_), 4))
+    elif score > dscore:
+        print("Player loses: ", calculate_payout(dscore, score, evaluator.class_to_string(class_), 4))
+    else:
+        print("Push - return: ", calculate_payout(dscore, score, evaluator.class_to_string(class_), 4))
+print("-------------------")
+print("Dealer: ")
+cd.print_pretty_cards(dealer)
+
+print("Score: %d - %s" % (dscore, evaluator.class_to_string(dclass)))
+
+
