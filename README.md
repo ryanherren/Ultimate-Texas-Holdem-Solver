@@ -23,3 +23,7 @@ Playing six handed with knowledge of all six hands allows the players to check s
 A goal of this project is to evaluate the players' edge with this strategy.
 Some prior research has been done on this topic:
 https://discountgambling.net/2010/01/15/practical-collusion-for-ultimate-texas-holdem/
+
+To anayze strength of hands, the program is using the evaluator from the treys library, which calculates each hand from 1 (Royal Flush) to 7462 (75432 unsuited).
+These hand ranks are then compared to the dealer's hand rank to evaluate for winning hands. The hand is then analyzed for payout and the payout is returned.
+More information about the treys library can be found here: https://github.com/ihendley/treys
